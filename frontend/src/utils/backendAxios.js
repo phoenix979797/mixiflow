@@ -1,11 +1,11 @@
-import axios from 'axios';
+import axios from "axios";
 
 // Create axios instance with custom config
 const backendAxios = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8001/api',
+  baseURL: process.env.REACT_APP_API_URL || "http://localhost:8001/api",
   timeout: 5000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -13,13 +13,13 @@ const backendAxios = axios.create({
 backendAxios.interceptors.request.use(
   (config) => {
     // Get token from localStorage
-    const token = localStorage.getItem('token');
-    
+    const token = localStorage.getItem("token");
+
     // If token exists, add it to request headers
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     return config;
   },
   (error) => {
@@ -35,10 +35,10 @@ backendAxios.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Clear localStorage and redirect to login
       localStorage.clear();
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }
 );
 
-export default backendAxios; 
+export default backendAxios;
