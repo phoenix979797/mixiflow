@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { users } = require("../models");
+const { users, apps } = require("../models");
 const logger = require("../utils/logger");
 const { OAuth2Client } = require("google-auth-library");
 const axios = require("axios");
@@ -353,17 +353,18 @@ exports.linkedinLogin = async (req, res) => {
 
 exports.calendlyLogin = async (req, res) => {
   try {
-    const { code } = req.body;
+    const { code, workspaceId } = req.body;
 
     // Exchange the authorization code for an access token
     const tokenResponse = await axios.post(
       "https://auth.calendly.com/oauth/token",
       {
+        grant_type: "authorization_code",
         client_id: process.env.CALENDLY_CLIENT_ID,
         client_secret: process.env.CALENDLY_CLIENT_SECRET,
-        grant_type: "authorization_code",
         code,
         redirect_uri: process.env.CALENDLY_REDIRECT_URI,
+        // code_verifier: "s3cr3tRandomString",
       },
       {
         headers: {
@@ -380,7 +381,7 @@ exports.calendlyLogin = async (req, res) => {
       },
     });
 
-    res.json({
+    const resData = {
       access_token: tokenResponse.data.access_token,
       refresh_token: tokenResponse.data.refresh_token,
       expires_in: tokenResponse.data.expires_in,
@@ -391,7 +392,17 @@ exports.calendlyLogin = async (req, res) => {
         schedulingUrl: userResponse.data.resource.scheduling_url,
         timezone: userResponse.data.resource.timezone,
       },
-    });
+    };
+
+    await apps.update(
+      {
+        app_key: JSON.stringify(resData),
+        status: "active",
+      },
+      { where: { workspace_id: workspaceId, app_type: "calendly" } }
+    );
+
+    res.json(resData);
   } catch (error) {
     console.error(
       "Calendly OAuth error:",

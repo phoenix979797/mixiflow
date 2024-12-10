@@ -14,6 +14,7 @@ import { ToastProvider } from "./context/ToastContext";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { MsalProvider } from "@azure/msal-react";
 import { msalInstance } from "./config/msalConfig";
+import CalendlyCallback from "./Components/Callback/Calendly";
 
 function App() {
   return (
@@ -33,6 +34,11 @@ function App() {
                 <Route path="/mai-subscribe" element={<MAISubscribe />} />
                 <Route path="/create-plan" element={<CreatePlan />} />
                 <Route path="/edit-workspace/:id" element={<EditWorkspace />} />
+
+                <Route
+                  path="/auth/callback/calendly"
+                  element={<CalendlyCallback />}
+                />
               </Routes>
             </Router>
           </MsalProvider>

@@ -351,7 +351,12 @@ const EditWorkspace = () => {
     window.addEventListener("message", async (event) => {
       if (event.origin !== window.location.origin) return;
 
-      if (event.data.type === "CALENDLY_AUTH_SUCCESS") {
+      console.log(window.last, event.data.uid);
+
+      if (
+        event.data.type === "CALENDLY_AUTH_SUCCESS" &&
+        window.last !== event.data.uid
+      ) {
         try {
           const { code, state: returnedState } = event.data;
 
@@ -364,25 +369,39 @@ const EditWorkspace = () => {
           // Exchange code for token
           const { data } = await backendAxios.post("/auth/calendly-login", {
             code,
+            workspaceId: id,
           });
 
           showToast("Calendly connected successfully!", "success");
           setApps((prevApps) =>
-            prevApps.map((app) =>
-              app.type === "calendly"
-                ? {
-                    ...app,
-                    signedIn: true,
-                    apiKey: JSON.stringify(data),
-                  }
-                : app
-            )
+            // prevApps.map((app) =>
+            //   app.type === "calendly"
+            //     ? {
+            //         ...app,
+            //         signedIn: true,
+            //         apiKey: JSON.stringify(data),
+            //       }
+            //     : app
+            // )
+            {
+              const nextApps = prevApps.map((item) =>
+                item.type === "calendly"
+                  ? {
+                      ...item,
+                      signedIn: true,
+                      apiKey: JSON.stringify(data),
+                    }
+                  : item
+              );
+              return nextApps;
+            }
           );
           sessionStorage.removeItem("calendly_state");
         } catch (error) {
           showToast("Calendly connection failed", "error");
         }
         authWindow.close();
+        window.removeEventListener("message", this);
       }
     });
   };
